@@ -36,10 +36,12 @@ server.post('/api/users', (req, res) => {
 server.get('/api/users/:id', (req, res) => {
   User.findById(req.params.id)
     .then(user =>{
-      if (!user) res.status(404).json({
-        message: "The user with the specified ID does not exist" 
-      })
-      res.json(user)
+      if (!user) {
+        res.status(404).json({
+          message: "The user with the specified ID does not exist" 
+        })
+      }
+      else res.json(user)
     })
     .catch(err => {
       res.status(500).json({
@@ -66,19 +68,27 @@ server.get('/api/users', (req, res) => {
     })
 })
 
-// DELETE a user (and get back the deleted user)
-/*
-- If the _user_ with the specified `id` is not found:
-
-  - respond with HTTP status code `404` (Not Found).
-  - return the following JSON object: `{ message: "The user with the specified ID does not exist" }`.
-
-- If there's an error in removing the _user_ from the database:
-  - respond with HTTP status code `500`.
-  - return the following JSON object: `{ message: "The user could not be removed" }`.
-*/
-server.delete('/api/users/:id', (req, res) => {
-  
+// DELETE a user
+server.delete('/api/users/:id', async (req, res) => {
+  const user = await User.findById(req.params.id)
+  if (!user) {
+    res.status(404).json({
+      message: "The user with the specified ID does not exist",
+    })
+  }
+  else {
+    User.remove(req.params.id)
+      .then(user =>{
+        res.json(user)
+      })
+      .catch(err => {
+        res.status(500).json({
+          message: "The user could not be removed",
+          err: err.message,
+          stack: err.stack,
+        })
+      })
+  }
 })
 
 // PUT a user (and get back the modified user)
